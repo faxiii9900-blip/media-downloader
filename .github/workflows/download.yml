@@ -23,7 +23,7 @@ jobs:
       - name: Set up Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg nodejs
           python3 -m pip install --upgrade pip
           pip install yt-dlp
 
@@ -36,11 +36,16 @@ jobs:
 
           if [ "$MODE" = "image" ]; then
             echo "Mode: Image only"
-            yt-dlp --skip-download --write-thumbnail -o "output/%(title).80s_thumb.%(ext)s" "$URL"
+            yt-dlp \
+              --extractor-args "youtube:player_client=android,web" \
+              --skip-download \
+              --write-thumbnail \
+              -o "output/%(title).80s_thumb.%(ext)s" \
+              "$URL"
           else
             echo "Mode: Max-res Video (QuickTime/H.264 compatible)"
-            # Fetch highest quality video + audio, convert to libx264/aac with yuv420p for QuickTime
             yt-dlp \
+              --extractor-args "youtube:player_client=android,web" \
               -f "bestvideo+bestaudio/best" \
               --recode-video mp4 \
               --postprocessor-args "VideoConvertor:-c:v libx264 -pix_fmt yuv420p -crf 18 -preset fast -c:a aac -b:a 320k -movflags +faststart" \
