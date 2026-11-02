@@ -25,7 +25,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg nodejs
           python3 -m pip install --upgrade pip
-          pip install yt-dlp
+          pip install yt-dlp bgutil-ytdlp-pot-provider
 
       - name: Process Media
         id: process
@@ -37,7 +37,7 @@ jobs:
           if [ "$MODE" = "image" ]; then
             echo "Mode: Image only"
             yt-dlp \
-              --extractor-args "youtube:player_client=android,web" \
+              --extractor-args "youtube:player_client=ios,android" \
               --skip-download \
               --write-thumbnail \
               -o "output/%(title).80s_thumb.%(ext)s" \
@@ -45,7 +45,7 @@ jobs:
           else
             echo "Mode: Max-res Video (QuickTime/H.264 compatible)"
             yt-dlp \
-              --extractor-args "youtube:player_client=android,web" \
+              --extractor-args "youtube:player_client=ios,android" \
               -f "bestvideo+bestaudio/best" \
               --recode-video mp4 \
               --postprocessor-args "VideoConvertor:-c:v libx264 -pix_fmt yuv420p -crf 18 -preset fast -c:a aac -b:a 320k -movflags +faststart" \
