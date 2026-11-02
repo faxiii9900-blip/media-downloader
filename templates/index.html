@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HD Media Downloader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151d2e;
+      --card-border: #1f2c44;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --error-bg: rgba(239, 68, 68, 0.15);
+      --error-border: #ef4444;
+      --success-bg: rgba(16, 185, 129, 0.15);
+      --success-border: #10b981;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    }
+
+    .badge-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-yt { background: rgba(255, 0, 0, 0.15); color: #ff4d4d; border: 1px solid rgba(255, 0, 0, 0.3); }
+    .badge-ig { background: rgba(225, 48, 108, 0.15); color: #e1306c; border: 1px solid rgba(225, 48, 108, 0.3); }
+    .badge-hd { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .mode-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .mode-option {
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #0d1322;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .mode-option.active {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.15);
+      color: #fff;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    input[type="url"] {
+      width: 100%;
+      padding: 1rem 1.2rem;
+      font-size: 1rem;
+      background: #0d1322;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="url"]:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      padding: 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s;
+    }
+
+    button:hover:not(:disabled) { background: var(--accent-hover); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status-panel {
+      margin-top: 1.5rem;
+      padding: 1rem 1.2rem;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .status-panel.loading {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+    }
+
+    .status-panel.loading .spinner { display: inline-block; }
+    .status-panel.error { display: block; background: var(--error-bg); border: 1px solid var(--error-border); color: #fca5a5; }
+    .status-panel.success { display: block; background: var(--success-bg); border: 1px solid var(--success-border); color: #6ee7b7; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="badge-bar">
+    <span class="badge badge-yt">YouTube</span>
+    <span class="badge badge-ig">Instagram</span>
+    <span class="badge badge-hd">HD &amp; Images</span>
+  </div>
+
+  <h1>Media Downloader</h1>
+  <p class="subtitle">Download highest-res video (QuickTime &amp; mobile compatible) or extract high-res images/thumbnails. Files auto-purge in 15 mins.</p>
+
+  <div class="mode-selector">
+    <div class="mode-option active" id="modeVideo" onclick="setMode('video')">🎬 Video (Max Res)</div>
+    <div class="mode-option" id="modeImage" onclick="setMode('image')">📸 Image Only</div>
+  </div>
+
+  <form id="downloadForm" class="form-group">
+    <input type="url" id="urlInput" placeholder="Paste YouTube or Instagram link..." required autocomplete="off" />
+    <button type="submit" id="submitBtn">
+      <span class="spinner" id="btnSpinner"></span>
+      <span id="btnText">Download Video</span>
+    </button>
+  </form>
+
+  <div id="statusPanel" class="status-panel"></div>
+</div>
+
+<script>
+  let currentMode = 'video';
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('modeVideo').classList.toggle('active', mode === 'video');
+    document.getElementById('modeImage').classList.toggle('active', mode === 'image');
+    document.getElementById('btnText').textContent = mode === 'video' ? 'Download Video' : 'Download Image(s)';
+  }
+
+  const form = document.getElementById('downloadForm');
+  const urlInput = document.getElementById('urlInput');
+  const submitBtn = document.getElementById('submitBtn');
+  const btnSpinner = document.getElementById('btnSpinner');
+  const btnText = document.getElementById('btnText');
+  const statusPanel = document.getElementById('statusPanel');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = urlInput.value.trim();
+    if (!url) return;
+
+    submitBtn.disabled = true;
+    btnSpinner.style.display = 'inline-block';
+    btnText.textContent = 'Processing...';
+
+    statusPanel.className = 'status-panel loading';
+    statusPanel.innerHTML = `<span class="spinner" style="display:inline-block"></span> Processing ${currentMode === 'video' ? 'highest resolution video' : 'full-size images'}...`;
+
+    try {
+      const response = await fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url, mode: currentMode })
+      });
+
+      if (!response.ok) {
+        let errMessage = 'Download failed.';
+        try {
+          const errData = await response.json();
+          errMessage = errData.error || errMessage;
+        } catch (_) {}
+        throw new Error(errMessage);
+      }
+
+      const disposition = response.headers.get('Content-Disposition');
+      let filename = currentMode === 'video' ? 'video.mp4' : 'image.jpg';
+      if (disposition && disposition.includes('filename=')) {
+        const matches = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
+        }
+      }
+
+      statusPanel.innerHTML = 'Receiving file in browser...';
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+
+      statusPanel.className = 'status-panel success';
+      statusPanel.innerHTML = `<strong>Success!</strong> Saved: <code>${filename}</code>`;
+      urlInput.value = '';
+    } catch (err) {
+      statusPanel.className = 'status-panel error';
+      statusPanel.innerHTML = `<strong>Error:</strong> ${err.message}`;
+    } finally {
+      submitBtn.disabled = false;
+      btnSpinner.style.display = 'none';
+      btnText.textContent = currentMode === 'video' ? 'Download Video' : 'Download Image(s)';
+    }
+  });
+</script>
+
+</body>
+</html>
