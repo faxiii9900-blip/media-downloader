@@ -1,0 +1,56 @@
+name: Cloud Media Downloader
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL of the YouTube video/shorts or Instagram post/reel'
+        required: true
+        type: string
+      mode:
+        description: 'Download Mode'
+        required: true
+        default: 'video'
+        type: choice
+        options:
+          - video
+          - image
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python3 -m pip install --upgrade pip
+          pip install yt-dlp
+
+      - name: Process Media
+        id: process
+        run: |
+          mkdir -p output
+          URL="${{ github.event.inputs.url }}"
+          MODE="${{ github.event.inputs.mode }}"
+
+          if [ "$MODE" = "image" ]; then
+            echo "Mode: Image only"
+            yt-dlp --skip-download --write-thumbnail -o "output/%(title).80s_thumb.%(ext)s" "$URL"
+          else
+            echo "Mode: Max-res Video (QuickTime/H.264 compatible)"
+            # Fetch highest quality video + audio, convert to libx264/aac with yuv420p for QuickTime
+            yt-dlp \
+              -f "bestvideo+bestaudio/best" \
+              --recode-video mp4 \
+              --postprocessor-args "VideoConvertor:-c:v libx264 -pix_fmt yuv420p -crf 18 -preset fast -c:a aac -b:a 320k -movflags +faststart" \
+              -o "output/%(title).80s.%(ext)s" \
+              "$URL"
+          fi
+
+      - name: Upload to GitHub (Expires in 24 hours / Retention 1 day)
+        uses: actions/upload-artifact@v4
+        with:
+          name: downloaded-media
+          path: output/
+          retention-days: 1
